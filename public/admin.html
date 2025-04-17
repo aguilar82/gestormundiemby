@@ -1,0 +1,45 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+  <meta charset="UTF-8">
+  <title>Administrador - Peticiones</title>
+  <style>
+    body { font-family: Arial; padding: 20px; background: #f5f5f5; }
+    table { width: 100%; border-collapse: collapse; margin-top: 20px; }
+    th, td { border: 1px solid #ccc; padding: 10px; text-align: left; }
+    th { background: #eee; }
+  </style>
+</head>
+<body>
+  <h2>Peticiones de Usuarios</h2>
+  <table>
+    <thead>
+      <tr>
+        <th>Usuario</th>
+        <th>Título</th>
+        <th>Descripción</th>
+        <th>Fecha</th>
+      </tr>
+    </thead>
+    <tbody id="peticiones"></tbody>
+  </table>
+
+  <script>
+    fetch('/admin/peticiones')
+      .then(res => res.json())
+      .then(data => {
+        const tbody = document.getElementById('peticiones');
+        data.forEach(p => {
+          const tr = document.createElement('tr');
+          tr.innerHTML = `
+            <td>${p.usuario}</td>
+            <td>${p.titulo}</td>
+            <td>${p.descripcion}</td>
+            <td>${new Date(p.fecha).toLocaleString()}</td>
+          `;
+          tbody.appendChild(tr);
+        });
+      });
+  </script>
+</body>
+</html>

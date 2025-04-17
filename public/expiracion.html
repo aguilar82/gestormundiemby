@@ -1,0 +1,40 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+  <meta charset="UTF-8" />
+  <title>Fecha de Expiración</title>
+  <style>
+    body { font-family: Arial; padding: 20px; background: #f5f5f5; }
+    #contador { font-size: 24px; margin-top: 20px; }
+  </style>
+</head>
+<body>
+  <h2>Tu cuenta expira en:</h2>
+  <div id="contador">Cargando...</div>
+  <script>
+    async function obtenerExpiracion() {
+      const res = await fetch('/api/expiracion');
+      const data = await res.json();
+      const fechaExp = new Date(data.fechaExp);
+      function actualizarContador() {
+        const ahora = new Date();
+        const diferencia = fechaExp - ahora;
+        if (diferencia <= 0) {
+          document.getElementById('contador').innerText = 'Tu cuenta ha expirado.';
+          clearInterval(intervalo);
+          return;
+        }
+        const dias = Math.floor(diferencia / (1000 * 60 * 60 * 24));
+        const horas = Math.floor((diferencia / (1000 * 60 * 60)) % 24);
+        const minutos = Math.floor((diferencia / (1000 * 60)) % 60);
+        const segundos = Math.floor((diferencia / 1000) % 60);
+        document.getElementById('contador').innerText =
+          `${dias}d ${horas}h ${minutos}m ${segundos}s`;
+      }
+      actualizarContador();
+      const intervalo = setInterval(actualizarContador, 1000);
+    }
+    obtenerExpiracion();
+  </script>
+</body>
+</html>

@@ -1,0 +1,166 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+  <meta charset="UTF-8">
+  <title>Mi Cuenta</title>
+  <style>
+    body { font-family: Arial; margin: 0; padding: 0; background: #f5f5f5; }
+    .container { max-width: 1200px; margin: 0 auto; padding: 20px; }
+    .header { background: #333; color: white; padding: 10px 20px; display: flex; justify-content: space-between; }
+    .tabs { display: flex; background: #444; }
+    .tab { padding: 10px 20px; color: white; cursor: pointer; }
+    .tab.active { background: #666; }
+    .tab-content { display: none; padding: 20px; background: white; }
+    .tab-content.active { display: block; }
+    #cuenta-atras { font-size: 2em; text-align: center; margin: 20px 0; }
+    table { width: 100%; border-collapse: collapse; margin-top: 20px; }
+    th, td { padding: 10px; border: 1px solid #ddd; text-align: left; }
+    button { padding: 5px 10px; cursor: pointer; }
+    .peticion-form { margin-top: 20px; }
+    .peticion-form input, .peticion-form select { padding: 8px; margin-right: 10px; }
+  </style>
+</head>
+<body>
+  <div class="header">
+    <h2>Mi Cuenta</h2>
+    <button onclick="logout()">Cerrar Sesión</button>
+  </div>
+
+  <div class="tabs">
+    <div class="tab active" onclick="cambiarTab(0)">Cuenta Atrás</div>
+    <div class="tab" onclick="cambiarTab(1)">Solicitar Contenido</div>
+    <div class="tab" onclick="cambiarTab(2)">Mis Solicitudes</div>
+  </div>
+
+  <div class="container">
+    <div id="tab-0" class="tab-content active">
+      <h3>Tiempo restante en tu cuenta:</h3>
+      <div id="cuenta-atras"></div>
+    </div>
+
+    <div id="tab-1" class="tab-content">
+      <h3>Solicitar nuevo contenido</h3>
+      <div class="peticion-form">
+        <select id="tipo-peticion">
+          <option value="pelicula">Película</option>
+          <option value="serie">Serie</option>
+        </select>
+        <input id="titulo-peticion" placeholder="Título" />
+        <button onclick="enviarPeticion()">Enviar Solicitud</button>
+      </div>
+    </div>
+
+    <div id="tab-2" class="tab-content">
+      <h3>Mis solicitudes</h3>
+      <table>
+        <thead>
+          <tr>
+            <th>Tipo</th>
+            <th>Título</th>
+            <th>Fecha</th>
+            <th>Estado</th>
+          </tr>
+        </thead>
+        <tbody id="mis-peticiones"></tbody>
+      </table>
+    </div>
+  </div>
+
+  <script>
+    const usuario = JSON.parse(localStorage.getItem('usuario'));
+    if (!usuario) window.location.href = '/login-usuario.html';
+
+    // Actualizar cuenta atrás cada segundo
+    function actualizarCuentaAtras() {
+      const fechaExp = new Date(usuario.fechaExp);
+      const ahora = new Date();
+      const diff = fechaExp - ahora;
+      
+      if (diff <= 0) {
+        document.getElementById('cuenta-atras').innerHTML = 'Tu cuenta ha expirado';
+        return;
+      }
+      
+      const dias = Math.floor(diff / (1000 * 60 * 60 * 24));
+      const horas = Math.floor((diff % (1000 * 60 * 60 * 24)) / (1000 * 60 * 60));
+      const minutos = Math.floor((diff % (1000 * 60 * 60)) / (1000 * 60));
+      const segundos = Math.floor((diff % (1000 * 60)) / 1000);
+      
+      document.getElementById('cuenta-atras').innerHTML = `
+        ${dias} días, ${horas} horas, ${minutos} minutos, ${segundos} segundos
+      `;
+    }
+    
+    setInterval(actualizarCuentaAtras, 1000);
+    actualizarCuentaAtras();
+
+    // Funciones para cambiar pestañas
+    function cambiarTab(index) {
+      document.querySelectorAll('.tab').forEach((tab, i) => {
+        tab.classList.toggle('active', i === index);
+      });
+      
+      document.querySelectorAll('.tab-content').forEach((content, i) => {
+        content.classList.toggle('active', i === index);
+      });
+      
+      if (index === 2) cargarMisPeticiones();
+    }
+
+    // Enviar petición
+    async function enviarPeticion() {
+      const tipo = document.getElementById('tipo-peticion').value;
+      const titulo = document.getElementById('titulo-peticion').value;
+      
+      if (!titulo) {
+        alert('Por favor ingresa un título');
+        return;
+      }
+      
+      const res = await fetch('/enviar-peticion', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({
+          userId: usuario.userId,
+          nombreUsuario: usuario.nombre,
+          tipo,
+          titulo
+        })
+      });
+      
+      if (res.ok) {
+        alert('Petición enviada con éxito');
+        document.getElementById('titulo-peticion').value = '';
+        cargarMisPeticiones();
+      } else {
+        alert('Error al enviar la petición');
+      }
+    }
+
+    // Cargar peticiones del usuario
+    async function cargarMisPeticiones() {
+      const res = await fetch(`/peticiones-usuario/${usuario.userId}`);
+      const peticiones = await res.json();
+      
+      const tbody = document.getElementById('mis-peticiones');
+      tbody.innerHTML = '';
+      
+      peticiones.forEach(p => {
+        const tr = document.createElement('tr');
+        tr.innerHTML = `
+          <td>${p.tipo === 'pelicula' ? 'Película' : 'Serie'}</td>
+          <td>${p.titulo}</td>
+          <td>${new Date(p.fecha).toLocaleDateString()}</td>
+          <td>${p.estado}</td>
+        `;
+        tbody.appendChild(tr);
+      });
+    }
+
+    function logout() {
+      localStorage.removeItem('usuario');
+      window.location.href = '/login-usuario.html';
+    }
+  </script>
+</body>
+</html>

@@ -1,0 +1,42 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+  <meta charset="UTF-8">
+  <title>Login Usuario</title>
+  <style>
+    body { font-family: Arial; padding: 20px; background: #f5f5f5; text-align: center; }
+    input, button { margin: 10px; padding: 8px; }
+    .login-box { max-width: 300px; margin: 50px auto; padding: 20px; background: white; border-radius: 5px; box-shadow: 0 0 10px rgba(0,0,0,0.1); }
+  </style>
+</head>
+<body>
+  <div class="login-box">
+    <h2>Iniciar Sesión</h2>
+    <input id="nombre" placeholder="Nombre de usuario" /><br>
+    <input id="contrasena" type="password" placeholder="Contraseña" /><br>
+    <button onclick="login()">Entrar</button>
+    <p id="error" style="color: red;"></p>
+  </div>
+
+  <script>
+    async function login() {
+      const nombre = document.getElementById('nombre').value;
+      const contrasena = document.getElementById('contrasena').value;
+      
+      const res = await fetch('/login-usuario', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ nombre, contrasena })
+      });
+      
+      if (res.ok) {
+        const usuario = await res.json();
+        localStorage.setItem('usuario', JSON.stringify(usuario));
+        window.location.href = '/usuario.html';
+      } else {
+        document.getElementById('error').textContent = 'Credenciales incorrectas';
+      }
+    }
+  </script>
+</body>
+</html>

@@ -1,0 +1,170 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+  <meta charset="UTF-8" />
+  <title>Gestor Emby</title>
+  <style>
+    body { font-family: Arial; padding: 20px; background: #f5f5f5; }
+    input, select, button { margin: 5px; padding: 6px; }
+    table { width: 100%; border-collapse: collapse; margin-top: 20px; }                                  
+    th, td { padding: 10px; border: 1px solid #ccc; text-align: left; }
+    button { cursor: pointer; }
+    #login, #contenido { display: none; }
+  </style>
+</head>
+<body>
+  <div id="login">
+    <h2>Iniciar Sesión</h2>
+    <input id="user" placeholder="Usuario" />
+    <input id="pass" placeholder="Contraseña" type="password" />
+    <button onclick="login()">Entrar</button>
+  </div>
+
+  <div id="contenido">
+    <h2>Crear Usuario</h2>
+    <input id="nombre" placeholder="Nombre" />
+    <input id="contrasena" placeholder="Contraseña" />
+    <input id="fecha" type="date" />
+    <input id="max" type="number" placeholder="Máx dispositivos" />
+    <select id="servidor">
+      <option value="http://mundiemby.us.to:33421">Servidor 1</option>
+      <option value="http://mundiemby.us.to:33422">Servidor 5</option>
+      <option value="http://mundiemby.us.to:33423">Servidor 3</option>
+      <option value="http://mundiemby.us.to:33424">Servidor 6</option>
+      <option value="http://mundiemby.us.to:33426">Servidor 4</option>
+      <option value="http://mundiemby.us.to:33427">Servidor 7</option>
+      <option value="http://mundiemby.us.to:33428">Servidor 2</option>
+    </select>
+    <button onclick="crearUsuario()">Crear</button>
+    <button onclick="window.location.href='/log.html'">Ver Log de Actividad</button>
+    <button onclick="window.location.href='/admin-peticiones.html'">Ver Peticiones de Usuarios</button>
+
+    <h2>Usuarios</h2>
+    <table>
+      <thead>
+        <tr>
+          <th>Nombre</th>
+          <th>Servidor</th>
+          <th>Fecha Exp</th>
+          <th>Dispositivos</th>
+          <th>Acciones</th>
+        </tr>
+      </thead>
+      <tbody id="usuarios"></tbody>
+    </table>
+  </div>
+
+  <script>
+    const USUARIO = 'mundiemby';
+    const CONTRASENA = 'Camaleon1';
+
+    function login() {
+      const u = document.getElementById('user').value;
+      const p = document.getElementById('pass').value;
+      if (u === USUARIO && p === CONTRASENA) {
+        document.getElementById('login').style.display = 'none';
+        document.getElementById('contenido').style.display = 'block';
+        fetchUsuarios();
+      } else {
+        alert('Credenciales incorrectas');
+      }
+    }
+
+    async function fetchUsuarios() {
+      const res = await fetch('/usuarios');
+      const datos = await res.json();
+      const tbody = document.getElementById('usuarios');
+      tbody.innerHTML = '';
+      datos.forEach(u => {
+        const tr = document.createElement('tr');
+        tr.innerHTML = `
+          <td>${u.nombre}</td>
+          <td>${u.servidor}</td>
+          <td>${u.fechaExp}</td>
+          <td>${u.maxDispositivos}</td>
+        `;
+        const acciones = document.createElement('td');
+
+        const del = document.createElement('button');
+        del.innerText = 'Eliminar';
+        del.onclick = () => eliminarUsuario(u.id, u.servidor);
+        acciones.appendChild(del);
+
+        const pass = document.createElement('button');
+        pass.innerText = 'Cambiar Contraseña';
+        pass.onclick = () => {
+          const nueva = prompt('Nueva contraseña:');
+          if (nueva) editarContraseña(u.id, u.servidor, nueva);
+        };
+        acciones.appendChild(pass);
+
+        const disp = document.createElement('button');
+        disp.innerText = 'Editar Dispositivos';
+        disp.onclick = () => {
+          const nuevo = prompt('Nuevo máximo:', u.maxDispositivos);
+          if (nuevo) editarDispositivos(u.id, u.servidor, nuevo);
+        };
+        acciones.appendChild(disp);
+
+        tr.appendChild(acciones);
+        tbody.appendChild(tr);
+      });
+    }
+
+    async function crearUsuario() {
+      const nombre = document.getElementById('nombre').value;
+      const contrasena = document.getElementById('contrasena').value;
+      const servidor = document.getElementById('servidor').value;
+      const fecha = document.getElementById('fecha').value;
+      const max = document.getElementById('max').value;
+
+      const res = await fetch('/crear-usuario', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ nombre, contraseña: contrasena, servidor, fechaExp: fecha, maxDispositivos: max })
+      });
+
+      const result = await res.json();
+      alert(result.status || result.error);
+      fetchUsuarios();
+    }
+
+    async function eliminarUsuario(userId, servidor) {
+      if (!confirm('¿Seguro?')) return;
+      const res = await fetch('/eliminar-usuario', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ userId, servidor })
+      });
+      const result = await res.json();
+      alert(result.status || result.error);
+      fetchUsuarios();
+    }
+
+    async function editarContraseña(userId, servidor, nuevaContraseña) {
+      const res = await fetch('/editar-contrasena', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ userId, servidor, nuevaContrasena: nuevaContraseña })
+      });
+      const result = await res.json();
+      alert(result.status || result.error);
+    }
+
+    async function editarDispositivos(userId, servidor, maxDispositivos) {
+      const res = await fetch('/editar-dispositivos', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ userId, servidor, maxDispositivos })
+      });
+      const result = await res.json();
+      alert(result.status || result.error);
+      fetchUsuarios();
+    }
+
+    window.onload = () => {
+      document.getElementById('login').style.display = 'block';
+    }
+  </script>
+</body>
+</html>

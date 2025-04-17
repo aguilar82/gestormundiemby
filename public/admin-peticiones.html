@@ -1,0 +1,88 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+  <meta charset="UTF-8">
+  <title>Peticiones de Usuarios</title>
+  <style>
+    body { font-family: Arial; margin: 0; padding: 0; background: #f5f5f5; }
+    .container { max-width: 1200px; margin: 0 auto; padding: 20px; }
+    .header { background: #333; color: white; padding: 10px 20px; }
+    table { width: 100%; border-collapse: collapse; margin-top: 20px; }
+    th, td { padding: 10px; border: 1px solid #ddd; text-align: left; }
+    select, button { padding: 5px; margin-right: 5px; }
+  </style>
+</head>
+<body>
+  <div class="header">
+    <h2>Peticiones de Usuarios</h2>
+    <button onclick="window.location.href='/index.html'">Volver al Panel</button>
+  </div>
+
+  <div class="container">
+    <table>
+      <thead>
+        <tr>
+          <th>Usuario</th>
+          <th>Tipo</th>
+          <th>Título</th>
+          <th>Fecha</th>
+          <th>Estado</th>
+          <th>Acciones</th>
+        </tr>
+      </thead>
+      <tbody id="peticiones"></tbody>
+    </table>
+  </div>
+
+  <script>
+    async function cargarPeticiones() {
+      const res = await fetch('/peticiones');
+      const peticiones = await res.json();
+      
+      const tbody = document.getElementById('peticiones');
+      tbody.innerHTML = '';
+      
+      peticiones.forEach(p => {
+        const tr = document.createElement('tr');
+        tr.innerHTML = `
+          <td>${p.nombreUsuario}</td>
+          <td>${p.tipo === 'pelicula' ? 'Película' : 'Serie'}</td>
+          <td>${p.titulo}</td>
+          <td>${new Date(p.fecha).toLocaleDateString()}</td>
+          <td>${p.estado}</td>
+          <td>
+            <select id="estado-${p.id}">
+              <option value="pendiente" ${p.estado === 'pendiente' ? 'selected' : ''}>Pendiente</option>
+              <option value="en_proceso" ${p.estado === 'en_proceso' ? 'selected' : ''}>En proceso</option>
+              <option value="completada" ${p.estado === 'completada' ? 'selected' : ''}>Completada</option>
+              <option value="rechazada" ${p.estado === 'rechazada' ? 'selected' : ''}>Rechazada</option>
+            </select>
+            <button onclick="actualizarPeticion(${p.id})">Actualizar</button>
+          </td>
+        `;
+        tbody.appendChild(tr);
+      });
+    }
+
+    async function actualizarPeticion(id) {
+      const estado = document.getElementById(`estado-${id}`).value;
+      
+      const res = await fetch('/actualizar-peticion', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ id, estado })
+      });
+      
+      if (res.ok) {
+        alert('Estado actualizado');
+        cargarPeticiones();
+      } else {
+        alert('Error al actualizar');
+      }
+    }
+
+    // Cargar peticiones al iniciar
+    cargarPeticiones();
+  </script>
+</body>
+</html>

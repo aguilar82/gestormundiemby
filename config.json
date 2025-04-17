@@ -1,0 +1,51 @@
+{
+  "admin": {
+    "username": "mundiemby",
+    "password": "Camaleon1"
+  },
+  "user_prefix": "u-",
+  "avoid_users": ["admin", "system", "emby"],
+  "user_policy": {
+    "IsAdministrator": false,
+    "EnableRemoteAccess": true,
+    "EnableLiveTvAccess": true,
+    "EnableAudioPlaybackTranscoding": true,
+    "EnableVideoPlaybackTranscoding": true,
+    "EnableContentDownloading": true,
+    "EnableMediaPlayback": true,
+    "EnableSyncTranscoding": true,
+    "EnableAllDevices": true,
+    "EnablePublicSharing": true,
+    "MaxSimultaneousStreams": 2
+  },
+  "servers": {
+    "servidor1": {
+      "url": "http://mundiemby.us.to:33421",
+      "apiKey": "241ac4cd1eb74a6b9218ffc5fdb5efcf"
+    },
+    "servidor2": {
+      "url": "http://mundiemby.us.to:33428",
+      "apiKey": "e825b3f79022462490d0591ab45e7acb"
+    },
+    "servidor3": {
+      "url": "http://mundiemby.us.to:33423",
+      "apiKey": "1536b2acc91043e189e83008956e22fb"
+    },
+    "servidor4": {
+      "url": "http://mundiemby.us.to:33426",
+      "apiKey": "b2cd008a7f4d4ab780d29165d5bcf1ef"
+    },
+    "servidor5": {
+      "url": "http://mundiemby.us.to:33422",
+      "apiKey": "8a05cb8dc0f7402991448ecf6511cc3d"
+    },
+    "servidor6": {
+      "url": "http://mundiemby.us.to:33424",
+      "apiKey": "47b40611aa7c42db8b03ff4848346711"
+    },
+    "servidor7": {
+      "url": "http://mundiemby.us.to:33427",
+      "apiKey": "10f90d322cae460f8c357586b1cde83b"
+    }
+  }
+}
